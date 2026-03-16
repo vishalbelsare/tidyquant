@@ -10,8 +10,7 @@
 #'
 #' @details
 #' `tq_index()` returns the stock symbol, company name, weight, and sector of every stock
-#' in an index. The source is
-#' \href{https://www.ssga.com/us/en/individual/etfs/fund-finder}{www.ssga.com}.
+#' in an index.
 #'
 #' `tq_index_options()` returns a list of stock indexes you can
 #' choose from.
@@ -23,13 +22,20 @@
 #' `tq_exchange_options()` returns a list of stock exchanges you can
 #' choose from. The options are AMEX, NASDAQ and NYSE.
 #'
+#' `tq_fund_holdings()` returns the the stock symbol, company name, weight, and sector of every stock
+#' in an fund. The `source` parameter specifies which investment management company to use.
+#' Example: `source = "SSGA"` connects to State Street Global Advisors (SSGA).
+#' If `x = "SPY"`, then SPDR SPY ETF holdings will be returned.
+#'
+#' `tq_fund_source_options()`: returns the options that can be used for the `source` API for `tq_fund_holdings()`.
+#'
 #' @seealso
 #' [tq_get()] to get stock prices, financials, key stats, etc using the stock symbols.
 #'
 #'
 #' @examples
-#' # Load libraries
-#' library(tidyquant)
+#'
+#' # Stock Indexes:
 #'
 #' # Get the list of stock index options
 #' tq_index_options()
@@ -39,12 +45,24 @@
 #' tq_index("DOW")
 #' }
 #'
+#' # Stock Exchanges:
+#'
 #' # Get the list of stock exchange options
 #' tq_exchange_options()
 #'
 #' # Get all stocks in a stock exchange
 #' \dontrun{
 #' tq_exchange("NYSE")
+#' }
+#'
+#' # Mutual Funds and ETFs:
+#'
+#' # Get the list of stock exchange options
+#' tq_fund_source_options()
+#'
+#' # Get all stocks in a fund
+#' \dontrun{
+#' tq_fund_holdings("SPY", source = "SSGA")
 #' }
 #'
 #' @name tq_index
@@ -60,34 +78,79 @@ tq_index <- function(x, use_fallback = FALSE) {
     x <- clean_index(x)
 
     # Verify index
-    verified <- verify_index(x)
+    verified <- tryCatch({
+        verify_index(x)
+    }, error = function(e) {
+        warning(paste("Error verifying index:", e$message), call. = FALSE)
+        return(NULL)
+    })
 
-    # If not a verified index, error
-    if(!verified$is_verified) {
+    # If verification failed or not a verified index, return a warning and empty tibble
+    if(is.null(verified) || !verified$is_verified) {
         warning(verified$err)
         return(tibble::tibble())
     }
 
     # Use fallback if requested
-    if(use_fallback) return(index_fallback(x))
+    if(use_fallback) {
+        return(tryCatch({
+            index_fallback(x)
+        }, error = function(e) {
+            warning(paste("Error using fallback for index:", e$message), call. = FALSE)
+            return(tibble::tibble())
+        }))
+    }
 
     # Convert index name to SPDR ETF name
-    x_spdr <- spdr_mapper(x)
+    x_spdr <- tryCatch({
+        spdr_mapper(x)
+    }, error = function(e) {
+        warning(paste("Error mapping SPDR ETF name:", e$message), call. = FALSE)
+        return(NULL)
+    })
 
-    # Download
-    dload <- index_download(x_spdr, index_name = x)
+    # If SPDR mapping failed, return an empty tibble
+    if(is.null(x_spdr)) {
+        return(tibble::tibble())
+    }
 
-    # Report download errors
-    if(!is.null(dload$err)) {
+    # Download the index data
+    dload <- tryCatch({
+        ssga_download(x_spdr, index_name = x)
+    }, error = function(e) {
+        warning(paste("Error downloading index data:", e$message), call. = FALSE)
+        return(NULL)
+    })
+
+    # If download failed, return a warning and empty tibble
+    if(is.null(dload) || !is.null(dload$err)) {
         warning(dload$err)
         return(tibble::tibble())
     }
 
     # Clean holdings
-    df <- clean_holdings(dload$df)
+    df <- tryCatch({
+        clean_holdings(dload$df)
+    }, error = function(e) {
+        warning(paste("Error cleaning index holdings:", e$message), call. = FALSE)
+        return(tibble::tibble())
+    })
 
     df
 }
+
+#' @rdname tq_index
+#' @export
+tq_index_options <- function() {
+    c(
+        "DOW",
+        "DOWGLOBAL",
+        "SP400",
+        "SP500",
+        "SP600"
+    )
+}
+
 
 # tq_exchange ----
 
@@ -107,72 +170,79 @@ tq_exchange <- function(x) {
     if (!(x %in% c(exchange_list))) {
         err <- paste0("Error: x must be a character string in the form of a valid exchange.",
                       " The following are valid options:\n",
-                      stringr::str_c(tq_exchange_options(), collapse = ", ")
-        )
-        stop(err)
+                      stringr::str_c(tq_exchange_options(), collapse = ", "))
+        stop(err, call. = FALSE)
     }
 
-    # Download
+    # Download data
     message("Getting data...\n")
     base_path_1 <- "https://api.nasdaq.com/api/screener/stocks?tableonly=true&exchange="
     base_path_2 <- "&download=true"
-    url         <- paste0(base_path_1, x, base_path_2)
-    # res         <- csv_downloader(path = url)
-    res         <- jsonlite::fromJSON(url)
+    url <- paste0(base_path_1, x, base_path_2)
 
-    # Evaluate Response / Clean & Return
-    if (is.null(res$err)) {
-        exchange_raw <- res$data$rows
+    # Perform the HTTP request with error handling
+    response <- tryCatch({
+        httr2::request(url) %>%
+            httr2::req_user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36") %>%
+            httr2::req_perform()
+    }, error = function(e) {
+        warning(paste0("Failed to retrieve data for exchange '", x, "'. ", e$message), call. = FALSE)
+        return(NULL)
+    })
 
-        # Post-process response
-        suppressWarnings({
-          exchange <- exchange_raw %>%
-            dplyr::mutate_if(is.character, stringr::str_trim) %>%
-            dplyr::as_tibble() %>%
+    # If the response is NULL (failed request), return NA
+    if (is.null(response)) {
+        return(NA)
+    }
+
+    # Evaluate the response
+    if (response$status_code == 200) {
+        # Collect JSON and process the data
+        content <- httr2::resp_body_json(response)
+        exchange_tbl <- tryCatch({
+            do.call(rbind, lapply(content$data$rows, tibble::as_tibble))
+        }, error = function(e) {
+            warning("Failed to process data from the response.", call. = FALSE)
+            return(NULL)
+        })
+
+        # If the processing failed, return NA
+        if (is.null(exchange_tbl)) {
+            return(NA)
+        }
+
+        # Post-process and clean the data
+        exchange <- exchange_tbl %>%
             dplyr::rename(
-              symbol = symbol,
-              company = name,
-              last.sale.price = lastsale,
-              market.cap = marketCap,
-              country = country,
-              ipo.year = ipoyear,
-              sector = sector,
-              industry = industry
+                symbol = symbol,
+                company = name,
+                last.sale.price = lastsale,
+                market.cap = marketCap,
+                country = country,
+                ipo.year = ipoyear,
+                sector = sector,
+                industry = industry
             ) %>%
             dplyr::mutate(
-              symbol = as.character(symbol),
-              company = as.character(company),
-              last.sale.price = as.numeric(stringr::str_remove(last.sale.price, "\\$")),
-              market.cap = as.numeric(market.cap),
-              country = as.character(country),
-              ipo.year = as.integer(ipo.year),
-              sector = as.character(sector),
-              industry = as.character(industry)
+                symbol = as.character(symbol),
+                company = as.character(company),
+                last.sale.price = as.numeric(stringr::str_remove(last.sale.price, "\\$")),
+                market.cap = as.numeric(market.cap),
+                country = as.character(country),
+                ipo.year = as.integer(ipo.year),
+                sector = as.character(sector),
+                industry = as.character(industry)
             ) %>%
-            dplyr::select(symbol:industry) %>% 
+            dplyr::select(symbol:industry) %>%
             dplyr::select(-c(netchange, pctchange, volume))
-        })
 
         return(exchange)
 
     } else {
-        warn <- paste0("Error at ", x, " during call to tq_exchange.\n\n", res$err)
-        warning(warn)
-        return(NA) # Return NA on error
+        warn <- paste0("Error retrieving data for exchange '", x, "'. Status code: ", response$status_code)
+        warning(warn, call. = FALSE)
+        return(NA)
     }
-
-}
-
-#' @rdname tq_index
-#' @export
-tq_index_options <- function() {
-    c(
-      "DOW",
-      "DOWGLOBAL",
-      "SP400",
-      "SP500",
-      "SP600"
-      )
 }
 
 
@@ -180,6 +250,71 @@ tq_index_options <- function() {
 #' @export
 tq_exchange_options <- function() {
     c("AMEX", "NASDAQ", "NYSE")
+}
+
+# tq_fund_holdings ----
+
+# TODO : BLACKROCK
+# https://www.ishares.com/us/products/239705/ishares-phlx-semiconductor-etf/1467271812596.ajax?fileType=csv&fileName=SOXX_holdings&dataType=fund
+# https://www.blackrock.com/us/individual/products/239710/ishares-russell-2000-etf/1464253357814.ajax?fileType=csv&fileName=IWM_holdings&dataType=fund
+
+#' @rdname tq_index
+#' @param source The API source to use.
+#' @export
+tq_fund_holdings <- function(x, source = "SSGA") {
+
+    # Verify index
+    verified <- tryCatch({
+        verify_fund_source(source)
+    }, error = function(e) {
+        warning(paste("Error verifying index:", e$message), call. = FALSE)
+        return(NULL)
+    })
+
+    # If verification failed or not a verified index, return a warning and empty tibble
+    if(is.null(verified) || !verified$is_verified) {
+        warning(verified$err)
+        return(tibble::tibble())
+    }
+
+    # Download the index data
+    dload <- tryCatch({
+        source <- stringr::str_to_upper(source)
+
+        if (source == "SSGA") {
+            ssga_download(x, index_name = x)
+        } else {
+
+        }
+
+
+    }, error = function(e) {
+        warning(paste("Error downloading index data:", e$message), call. = FALSE)
+        return(NULL)
+    })
+
+    # If download failed, return a warning and empty tibble
+    if(is.null(dload) || !is.null(dload$err)) {
+        warning(dload$err)
+        return(tibble::tibble())
+    }
+
+    # Clean holdings
+    df <- tryCatch({
+        clean_holdings(dload$df)
+    }, error = function(e) {
+        warning(paste("Error cleaning index holdings:", e$message), call. = FALSE)
+        return(tibble::tibble())
+    })
+
+    df
+
+}
+
+#' @rdname tq_index
+#' @export
+tq_fund_source_options <- function() {
+    c("SSGA")
 }
 
 # Utility ----------------------------------------------------------------------------------------------------
@@ -211,6 +346,23 @@ verify_index <- function(x) {
     verified
 }
 
+verify_fund_source <- function(x) {
+
+    # Setup with initial values
+    verified <- list(is_verified = FALSE, err = "")
+
+    if(!(x %in% tq_fund_source_options())) {
+
+        verified$err <- paste0(x, " must be a character string in the form of a valid Fund Source. ",
+                               "The following are valid options:\n",
+                               stringr::str_c(tq_fund_source_options(), collapse = ", "))
+    } else {
+        verified$is_verified <- TRUE
+    }
+
+    verified
+}
+
 # Map the index to the SPDR ETF name
 spdr_mapper <- function(x) {
 
@@ -222,19 +374,23 @@ spdr_mapper <- function(x) {
            DOWGLOBAL   = "DGT",
            SP400       = "MDY",
            SP500       = "SPY",
-           SP600       = "SLY",
+           # SLY seems broken.
+           # Using SLYG for S&P 600
+           # https://www.ssga.com/us/en/institutional/etfs/funds/spdr-sp-600-small-cap-growth-etf-slyg
+           SP600       = "SLYG",
            SP1000      = "SMD"
            )
 }
 
 # Download the index data from SPDR
-index_download <- function(x, index_name) {
+ssga_download <- function(x, index_name) {
 
     # Contruct download link
     #     OLD (< 2019-12-15): https://us.spdrs.com/site-content/xls/SPY_All_Holdings.xls
-    #     NEW (> 2019-12-15) https://www.ssga.com/us/en/institutional/etfs/library-content/products/fund-data/etfs/us/holdings-daily-us-en-spy.xlsx
+    #     NEW (> 2019-12-15): https://www.ssga.com/us/en/institutional/etfs/library-content/products/fund-data/etfs/us/holdings-daily-us-en-spy.xlsx
+    #     NEW (> 2024-08-16): https://www.ssga.com/us/en/institutional/library-content/products/fund-data/etfs/us/holdings-daily-us-en-spy.xlsx
     # spdr_link <- paste0("https://us.spdrs.com/site-content/xls/", x, "_All_Holdings.xls")
-    spdr_link <- paste0("https://www.ssga.com/us/en/institutional/etfs/library-content/products/fund-data/etfs/us/holdings-daily-us-en-", tolower(x), ".xlsx")
+    spdr_link <- paste0("https://www.ssga.com/us/en/institutional/library-content/products/fund-data/etfs/us/holdings-daily-us-en-", tolower(x), ".xlsx")
 
     # Results container
     res <- list(df = NULL, err = NULL)
@@ -246,7 +402,7 @@ index_download <- function(x, index_name) {
     tryCatch({
 
         # Download to disk, force as a xlsx
-        httr::GET(spdr_link, httr::write_disk(tf <- tempfile(fileext = ".xlsx")))
+        curl::curl_download(spdr_link, tf <- tempfile(fileext = ".xlsx"))
 
         # Read the xls file
         suppressMessages({
@@ -261,7 +417,7 @@ index_download <- function(x, index_name) {
     }, error = function(e) {
 
         # On error, catch it and return
-        res$err <- paste0("Error at ", index_name, " during download. \n", e)
+        res$err <- paste0("Error at ", index_name, x, " during download. \n", e)
 
         return(res)
 
@@ -297,6 +453,11 @@ clean_holdings <- function(x) {
 
     # Reorder
     ret <- ret %>% dplyr::select(symbol, company, dplyr::everything())
+
+    # Fix for stocks like BRK.B -> BRK-B for Yahoo Finance
+    ret <- ret %>%
+        dplyr::mutate(symbol = stringr::str_replace(symbol, "\\.", "-"))
+
 
     return(ret)
 }

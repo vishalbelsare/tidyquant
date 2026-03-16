@@ -66,7 +66,7 @@ Users can create new "IFS" functions using the \code{\link[=CREATE_IFS]{CREATE_I
 The only requirement is that the output of your function (\code{.f}) must be a single
 value (scalar). See examples below.
 }
-\section{Useful functions}{
+\section{Useful Functions}{
 
 
 \strong{Summary Functions} - Return a single value from a vector
@@ -77,14 +77,16 @@ value (scalar). See examples below.
 \item Range: \code{\link[=MIN_IFS]{MIN_IFS()}}, \code{\link[=MAX_IFS]{MAX_IFS()}}
 }
 
-_\emph{Create your own summary "\emph{IF" function}}
-This is a function factory that generates summary "_IFS" functions.
+\strong{Create your own summary "IFS" function}
+\itemize{
+\item \code{\link[=CREATE_IFS]{CREATE_IFS()}}: This is a function factory that generates summary "_IFS" functions.
+}
 }
 
 \examples{
-library(tidyverse)
-library(tidyquant)
-library(timetk)
+\dontshow{if (rlang::is_installed("forcats")) withAutoprint(\{ # examplesIf}
+library(dplyr)
+library(timetk, exclude = "FANG")
 library(stringr)
 library(lubridate)
 
@@ -114,7 +116,7 @@ FANG \%>\%
 
 # Count negative returns by month
 FANG \%>\%
-    mutate(symbol = as_factor(symbol)) \%>\%
+    mutate(symbol = forcats::as_factor(symbol)) \%>\%
     group_by(symbol) \%>\%
 
     # Collapse from daily to FIRST value by month
@@ -134,5 +136,5 @@ FANG \%>\%
     summarise(
         negative_monthly_returns = COUNT_IFS(returns, returns < 0)
     )
-
+\dontshow{\}) # examplesIf}
 }

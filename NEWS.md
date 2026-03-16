@@ -1,11 +1,98 @@
+# tidyquant 1.0.12
 
-## tidyquant 1.0.3
+- Remove dependency to Quandl R package
+- Patched the FRED-dependent CRAN failure path so an unavailable economic.data endpoint no longer cascades into example/test errors.
+- Added explicit parameter docs for quandl_search() in R/api-quandl.R (line 38) and synced the generated Rd in man/quandl_search.Rd (line 9). The missing items were query, silent, per_page, and ..., which is what triggered the checking Rd \usage sections warning.
+
+
+# tidyquant 1.0.11
+
+Fixes text: XYZ is now a live symbol. 
+
+# tidyquant 1.0.10
+
+Fixes error with `tq_performance()` #252 
+
+# tidyquant 1.0.9
+
+## New Function: 
+
+- `tq_fund_holdings()`: Retrieves the fund holdings and compositions for a fund and source combination. Example: `tq_fund_holdings("SPY", source = "SSGA")` #250
+
+## Fixes and Improvements:
+
+- Fixes to CRAN's API policy #249:
+
+> "Packages which use Internet resources should fail gracefully with an
+informative message if the resource is not available or has changed (and
+not give a check warning nor error)."
+
+
+
+
+# tidyquant 1.0.8
+
+## TQ INDEX AND EXCHANGE:
+
+- `tq_index("SP500")`: Fixed broken API call (#246)
+- `tq_exchange("NASDAQ")`: Fixed broken API call (#226, #248)
+
+## Breaking changes
+
+- tidyquant no longer loads lubridate. (@olivroy, #237)
+  
+  If you use tidyquant with tidyverse, there is no change for you.
+
+- tidyquant no longer loads many packages on load.
+
+## Fixes
+
+- tidyquant startup messages mimics the tidyverse messages for clarity. (@olivroy, #163, #116)
+- Remove the dependency on tidyverse (@olivroy, #236)
+- tidyquant no longer loads lubridate as tidyverse 2.0 now loads lubridate.
+- Changed the `size` argument to `linewidth` for ggplot2 3.4.0
+- Removed the last tidyr and dplyr deprecated functions.
+- Add `linewidth` to `geom_ma()`
+- Move `Quandl`, `riingo`, and `alphavantager` to Suggests. tidyquant will not explicitly install those, but you can install them from CRAN.
+- Fixed CRAN package alias
+- FB to META change  in `FANG`
+- `geom_bbands()`, `geom_candlestick()`, and `geom_barchart()` no longer emit dropped aesthetics warnings. (@olivroy, #235)
+
+
+# tidyquant 1.0.7
+
+- Moved `tidyverse` from suggest to imports to pass cran tests
+
+# tidyquant 1.0.6
+
+- Fix tq_performance test failure under PerformanceAnalytics 2.0.6 #223
+- Fix failed r-devel test identified by CRAN
+- Remove deprecated `spread_()` function
+- Move `readxl` to imports. #222
+
+# tidyquant 1.0.5
+
+- FIX: FB to META name change
+- IMPROVEMENT: `sp_index()` to convert symbols from "BRK.B" to "BRK-B" to work with Yahoo Finance
+
+# tidyquant 1.0.4
+
+CRAN requested fixes:
+
+- Moved `janitor` to suggests
+- Reduced file size by removing vignettes from CRAN version. 
+
+Other changes:
+
+- Removed the package start-up message
+
+# tidyquant 1.0.3
 
 ### Fixes
 
 - `tq_exchange()`: Switch to new NASDAQ website. 
 
-## tidyquant 1.0.2 
+# tidyquant 1.0.2 
 
 ### Fixes
 
@@ -13,7 +100,7 @@
 - `theme_tq()`: Fix issues with `%+replace%`, `theme_gray`, and `rel` not found. 
 
 
-## tidyquant 1.0.1
+# tidyquant 1.0.1
 
 ### Improvements
 
@@ -30,7 +117,7 @@
 
 
 
-## tidyquant 1.0.0
+# tidyquant 1.0.0
 
 > This is the _"R for Excel Users"_ release. My aim is to build functionality that helps users coming from an __Excel Background__ (background I came from). It's important to have these users feel at home. I have a full suite of functionality to accomplish your Excel-to-R transition. 
 >
@@ -59,7 +146,7 @@
             - Excel Date Math functions: `NET_WORKDAYS()`, `EOMONTH()`
         - __Financial Math Functions__ - `NPV()`, `IRR()`, `FV()`, `PV()`, `PMT()`, `RATE()`
   
-* __NEW Tidyverse Functionality__
+* __NEW tidyverse Functionality__
     - `summarise_by_time()` - This is a new time-based variant of `summarise()` that allows collapsing the time-series by "day", "week", "month", "quarter", "year", and more. 
     - Note: I will evaluate the need for `summarise_at_by_time()`, `summarise_all_by_time()`, and `summarise_if_by_time()` after the release of `dplyr` v1.0.0.
 
@@ -80,23 +167,23 @@
         - Oanda FX and Metal Prices
     * __Deprecated Compound Getters__ - Stacking multiple get options (`tq_get("AAPL", get = c("stock.prices", "stock.prices.japan"))`) is no longer available. __Solution:__ Split these up into two calls to `tq_get()`. 
 
-## tidyquant 0.5.10
+# tidyquant 0.5.10
 
-* `tq_get()` - Temporarily adjust tests for `tq_get(get = "dividends")` and `tq_get(get = "splits")` until API is stabilizes. Yahoo! Dividends and Splits intermitently returns errors.
+* `tq_get()` - Temporarily adjust tests for `tq_get(get = "dividends")` and `tq_get(get = "splits")` until API is stabilizes. Yahoo! Dividends and Splits intermittently returns errors.
 * Fix documentation warnings during package build checks. Documentation moved from `tq_stocklist` to `?tq_index`. 
 
-## tidyquant 0.5.9
+# tidyquant 0.5.9
 
 * `tq_index()` 
     - Fix issue #144 - `tq_index()` download issue. Note that "RUSSEL1000", "RUSSELL2000", "RUSSELL3000", and "SP1000" are no longer available due to changes from www.us.spdrs.com. 
     - Update Stock Index Fallback. 
  
 
-## tidyquant 0.5.8
+# tidyquant 0.5.8
 
 * `tq_index()` - Fix naming issue with stock index data downloaded from www.us.spdrs.com.
 
-## tidyquant 0.5.7
+# tidyquant 0.5.7
 
 _Stock Index & Exchanges_
 
@@ -107,21 +194,21 @@ _Visualizations & Color Palettes_
 * `geom_candlestick` and `geom_barchart` - Issue #112.
 * Added color names of `theme_tq` palettes (`palette_light`, `palette_dark`, and  `palette_green`) for easier identification.
 
-_Compatability with `tidyr` v1.0.0_
+_Compatibility with `tidyr` v1.0.0_
 
-* Improvements to ensure compatability with `tidyr` v1.0.0
+* Improvements to ensure compatibility with `tidyr` v1.0.0
 
 _[Potential Breaking Change] Move `tidyverse` to suggests_
 
 * This is actually potentially a "breaking change" (although most users will see no difference since you likely load `tidyverse` in your scripts) - if you do not load `tidyverse`, then you will now need to do so. Previously `tidyquant` loaded `tidyverse` behind the scenes.  
 
-## tidyquant 0.5.6
+# tidyquant 0.5.6
 
 * Morningstar Key Ratios: The `tq_get()` argument `get = "key.ratios"` has been deprecated due to a change in Morningstar's website. (Help Wanted - Ref. Issue #125)
 
 * Remove dependency on `XLConnect`. Replace with `readxl`. Issue #119.
 
-## tidyquant 0.5.5
+# tidyquant 0.5.5
 
 * Bux fix
 
@@ -139,7 +226,7 @@ _[Potential Breaking Change] Move `tidyverse` to suggests_
     * Fix duplicate name collision issue when the original name already includes 
     a `.`. Duplicate names now get a `..1`, `..2`, etc. as opposed to `.1`, `.2`.
 
-## tidyquant 0.5.4
+# tidyquant 0.5.4
 
 * Features:
     * Incorporate `alphavantager`, a lightweight API to the [Alpha Vantage financial data provider](https://www.alphavantage.co/).
@@ -155,19 +242,19 @@ _[Potential Breaking Change] Move `tidyverse` to suggests_
 * Bug Fixes:
     * Some tests failed with `testthat` 2.0. They have been updated.
 
-## tidyquant 0.5.3
+# tidyquant 0.5.3
 
 * Fixes for compatibility with `purrr` v0.2.3. 
 
 
-## tidyquant 0.5.2
+# tidyquant 0.5.2
 
 * Incorporated more robust `timetk` coercion functions. Deprecated `tidyquant::as_xts()` and `tidyquant::as_tibble()`. Use `timetk::tk_xts()` and `timetk::tk_tbl()` instead.
 * Fixes:
     * `tq_index()` no longer pulls from marketvolume. Instead, 9 indices are available from SPDR. These indices are more reliable, and include weights for each stock in the index.
     * Fixed 2 tests where the results of `tq_get(get = "stock.prices")` were 1 or 2 rows off of what the tests expected. This likely has to do with the new yahoo finance API.
 
-## tidyquant 0.5.1
+# tidyquant 0.5.1
 
 * Improvements
     * Added `pkgdown` integration.
@@ -179,7 +266,7 @@ _[Potential Breaking Change] Move `tidyverse` to suggests_
     * Fixed bug with `tq_portfolio()` where `weights = NULL` would not execute an equal weighting scheme.
     * Added error handling during dollar and percent conversion for get = "key.ratios" and get = "key.stats".
 
-## tidyquant 0.5.0
+# tidyquant 0.5.0
 
 * New Data:
     * Quandl Integration: 
@@ -200,7 +287,7 @@ _[Potential Breaking Change] Move `tidyverse` to suggests_
     * Fix `tq_get` error to return full error when issues are present. 
 
 
-## tidyquant 0.4.0
+# tidyquant 0.4.0
 
 * New Features:
     * `tq_transmute()` replaces `tq_transform()` for consistency with `dplyr`.
@@ -212,7 +299,7 @@ _[Potential Breaking Change] Move `tidyverse` to suggests_
     * Split introduction into four separate vignettes, which improves flow and enables readers to more easily get to needed documentation. Now five docs total covering the primary needs of `tidyquant` users!
 * New data:
     * `tq_exchange()` gets the stock list for NASDAQ, NYSE, and AMEX exchanges. Use `tq_exchange_options()` to exchange options.
-    * `FANG` data set that can be loaded with `data(FANG)`.
+    * `FANG` data set
 * New visualizations that integrate with `ggplot2`:
     * `palette_()` functions used to create scales are exported.
     * `theme_tq()` creates light, dark, and green themes for tidyquant visualizations.
@@ -228,10 +315,10 @@ _[Potential Breaking Change] Move `tidyverse` to suggests_
     * Issue #8, Part 1: Create `tq_index()` function to return a stock index. `tq_get(get = "stock.index")` is deprecated and will be removed during the next version after 0.4.0. Use `tq_index_options()` for index options. 
     * Issue #7: Fixed issue with date column inadvertently being coerced to `dttm`. 
 
-## tidyquant 0.3.0
+# tidyquant 0.3.0
 
 * New data:
-    * New `tq_get` option `get = "key.stats"`, which retrieves the current key statistics (55 total) from [www.finance.yahoo.com/](https://finance.yahoo.com/). These include various current data such as Ask, Bid, Day's High, Day's Low, Last Trade Price, current P/E Ratio, EPS, Current Market Cap, EPS Projected Current Year, EPS Projected Next Year and many more. Example: `tq_get("AAPL", get = "key.stats")`.
+    * New `tq_get` option `get = "key.stats"`, which retrieves the current key statistics (55 total) from www.finance.yahoo.com/. These include various current data such as Ask, Bid, Day's High, Day's Low, Last Trade Price, current P/E Ratio, EPS, Current Market Cap, EPS Projected Current Year, EPS Projected Next Year and many more. Example: `tq_get("AAPL", get = "key.stats")`.
 * New visualizations that integrate with `ggplot2`:
     * Chart geoms: Bar charts (`geom_barchart`) and candlestick charts (`geom_candlestick`) can be quickly created with the new geoms.
     * Moving Averages: Seven moving averages can be quickly visualized / prototyped using `geom_ma`. The geom wraps the `TTR::SMA` functions.
@@ -245,16 +332,17 @@ _[Potential Breaking Change] Move `tidyverse` to suggests_
     * Issue #2: Fixed bug with `tq_get()`, `get = "key.ratios"`, where key ratios for stocks from the NYSE returned `NA`.
 * Removed support for deprecated arguments: `x_fun`, `.x`, and `.y` in the respective transform and mutate functions.
 
-## tidyquant 0.2.0
+# tidyquant 0.2.0
 
-* New `get = "key.ratios"` option for `tq_get()`, which retrieves 10-years of key performance ratios (89 total) from [www.morningstar.com](https://www.morningstar.com). These include various historical measures of financial performance including profitability, growth, cash flow, financial health, efficiency, and valuation ratios. Example: `tq_get("AAPL", get = "key.ratios")`.
+* New `get = "key.ratios"` option for `tq_get()`, which retrieves 10-years of key performance ratios (89 total) from www.morningstar.com. These include various historical measures of financial performance including profitability, growth, cash flow, financial health, efficiency, and valuation ratios. Example: `tq_get("AAPL", get = "key.ratios")`.
 * Added `zoo` `rollapply()` functions to list of compatible / integrated functions used with `tq_transform()` and `tq_mutate()`. See `tq_transform_fun_options()` for the full list.
 * Changed `tq_mutate()`, `tq_transform()`, `tq_mutate_xy()` and `tq_transform_xy()` arguments to be more obvious:
     * `x_fun` is now `ohlc_fun` for `tq_mutate()` and `tq_transform()`
     * `.x` is now `x` and `.y` is now `y` for `tq_mutate_xy()` and `tq_transform_xy()`
-* Fixed duplication of column names during `tq_mutate`. Names are now sequentually indexed with duplicate names starting at `.1` suffix.  
+* Fixed duplication of column names during `tq_mutate`. Names are now sequentially indexed with duplicate names starting at `.1` suffix.  
 
 
-## tidyquant 0.1.0 
+# tidyquant 0.1.0 
+
 
 * Initial release of `tidyquant`, for seamless quantitative financial analysis (`xts`, `quantmod`, `TTR`) package integration with the `tidyverse`.

@@ -1,12 +1,11 @@
 Package: tidyquant
 Type: Package
 Title: Tidy Quantitative Financial Analysis
-Version: 1.0.3
+Version: 1.0.12.9000
 Authors@R: c(
     person("Matt", "Dancho", email = "mdancho@business-science.io", role = c("aut", "cre")),
     person("Davis", "Vaughan", email = "dvaughan@business-science.io", role = c("aut"))
   )
-Maintainer: Matt Dancho <mdancho@business-science.io>
 Description: Bringing business and financial analysis to the 'tidyverse'. The 'tidyquant' 
     package provides a convenient wrapper to various 'xts', 'zoo', 'quantmod', 'TTR' 
     and 'PerformanceAnalytics' package 
@@ -14,29 +13,29 @@ Description: Bringing business and financial analysis to the 'tidyverse'. The 't
     advantage is being able to use quantitative functions with the 'tidyverse'
     functions including 'purrr', 'dplyr', 'tidyr', 'ggplot2', 'lubridate', etc. See 
     the 'tidyquant' website for more information, documentation and examples.
-URL: https://github.com/business-science/tidyquant
+URL: https://business-science.github.io/tidyquant/, https://github.com/business-science/tidyquant
 BugReports: https://github.com/business-science/tidyquant/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends:
     R (>= 3.5.0),
-    lubridate,
-    PerformanceAnalytics,
-    quantmod (>= 0.4-13)
 Imports:
     dplyr (>= 1.0.0),
-    ggplot2,
-    jsonlite, 
+    ggplot2 (>= 3.4.0),
     httr,
-    curl, 
+    httr2,
+    curl,
+    jsonlite,
     lazyeval,
+    lubridate,
     magrittr,
+    PerformanceAnalytics,
+    RobStatTM,
+    quantmod (>= 0.4-13),
     purrr,
-    Quandl,
-    riingo,
-    readr, 
-    alphavantager (>= 0.1.2),
+    readr,
+    readxl,
     stringr,
     tibble,
     tidyr (>= 1.0.0),
@@ -45,22 +44,20 @@ Imports:
     TTR,
     xts,
     rlang,
-    tidyselect, 
-    rstudioapi,
-    crayon,
-    cli,
-    janitor
+    zoo,
+    cli
 Suggests:
-    tidyverse,
-    tibbletime, 
-    forcats,
+    alphavantager (>= 0.1.2),
+    riingo,
+    tibbletime,
     broom,
     knitr,
+    forcats,
     rmarkdown,
     testthat (>= 2.1.0),
     scales,
     Rblpapi,
-    readxl
-RoxygenNote: 7.1.1
+    janitor
+RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr

@@ -19,15 +19,14 @@ knitr::opts_chunk$set(message = FALSE,
                       fig.height = 4.5,
                       fig.align = 'center',
                       out.width='95%', 
-                      dpi = 200)
-# devtools::load_all() # Travis CI fails on load_all()
+                      dpi = 150)
 ```
 
 > A few core functions with a lot of power
 
 # Overview
 
-The `tidyquant` package has a __core functions with a lot of power__. Few functions means less of a learning curve for the user, which is why there are only a handful of functions the user needs to learn to perform the vast majority of financial analysis tasks. The main functions are:
+The `tidyquant` package has a __few core functions with a lot of power__. Few functions means less of a learning curve for the user, which is why there are only a handful of functions the user needs to learn to perform the vast majority of financial analysis tasks. The main functions are:
 
 * __Get a Stock Index, `tq_index()`, or a Stock Exchange, `tq_exchange()`__: Returns the stock symbols and various attributes for every stock in an index or exchange. Eighteen indexes and three exchanges are available.
 
@@ -42,12 +41,18 @@ The `tidyquant` package has a __core functions with a lot of power__. Few functi
 
 Load the `tidyquant` package to get started.
 
-```{r}
+```r
 # Loads tidyquant, lubridate, xts, quantmod, TTR 
 library(tidyverse)
 library(tidyquant)
 ```
 
+```{r, include=FALSE}
+# Load for R CMD CHECK
+library(dplyr)
+library(lubridate)
+library(tidyquant)
+```
 
 # 1.0 Retrieve Consolidated Symbol Data
 
@@ -65,7 +70,7 @@ Set `x` as one of the options in the list of options above to get the desired st
 tq_index("SP500")
 ```
 
-The data source is [State Street Global Advisors - US SPDRS ETFs](https://www.ssga.com/us/en/institutional/etfs).
+The data source is State Street Global Advisors.
 
 ## 1.2 Stock Exchanges
 
@@ -102,6 +107,16 @@ aapl_prices  <- tq_get("AAPL", get = "stock.prices", from = " 1990-01-01")
 aapl_prices 
 ```
 
+We can get multiple stocks:
+
+```{r}
+stocks <- c("AAPL", "META", "NFLX") %>%
+    tq_get(from = "2013-01-01",
+           to   = "2017-01-01")
+stocks
+```
+
+
 Yahoo Japan stock prices can be retrieved using a similar call, `get = "stock.prices.japan"`.
 
 ```{r, eval = F}
@@ -109,7 +124,7 @@ x8411T <- tq_get("8411.T", get = "stock.prices.japan", from = "2016-01-01", to  
 ```
 
 
-The data source is [Yahoo Finance](https://finance.yahoo.com/) and [Yahoo Finance Japan](https://finance.yahoo.co.jp/).
+The data source is Yahoo Finance (https://finance.yahoo.com/) and Yahoo Finance Japan.
 
 ## 2.2 FRED Economic Data
 
@@ -119,18 +134,25 @@ A wealth of economic data can be extracted from the Federal Reserve Economic Dat
 
 
 ```{r,}
-wti_price_usd <- tq_get("DCOILWTICO", get = "economic.data")
-wti_price_usd 
+wti_price_usd <- suppressWarnings(
+    tq_get("DCOILWTICO", get = "economic.data")
+)
+
+if (tibble::is_tibble(wti_price_usd)) {
+    wti_price_usd
+} else {
+    tibble::tibble()
+}
 ```
 
 
-## 2.3 Quandl API
+## 2.3 Nasdaq Data Link (Quandl) API
 
-[Quandl](https://www.quandl.com/) provides access to a vast number of financial and economic databases. The `Quandl` package has been integrated into `tidyquant` as follows.
+[Nasdaq Data Link](https://data.nasdaq.com/) provides access to a vast number of financial and economic databases. tidyquant includes a built-in client for this API, so no extra package installation is required.
 
 ### Authentication
 
-To make full use of the integration we recommend you set your api key. To do this create or sign into your Quandl account and go to your account api key page.
+To make full use of the integration we recommend you set your api key. To do this create or sign into your Nasdaq Data Link account and go to your account api key page.
 
 ```{r, eval = F}
 quandl_api_key("<your-api-key>")
@@ -138,31 +160,31 @@ quandl_api_key("<your-api-key>")
 
 ### Search
 
-Searching Quandl from within the R console is possible with `quandl_search()`, a wrapper for `Quandl::Quandl.search()`. An example search is shown below. The only required argument is `query`. You can also visit the [Quandl Search](https://www.quandl.com/search) webpage to search for available database codes. 
+Searching Nasdaq Data Link from within the R console is possible with `quandl_search()`. An example search is shown below. The only required argument is `query`. You can also visit the [Nasdaq Data Link Search](https://data.nasdaq.com/search) webpage to search for available database codes. 
 
 ```{r, eval = F}
 quandl_search(query = "Oil", database_code = "NSE", per_page = 3)
 ```
 
-### Getting Quandl Data
+### Getting Nasdaq Data Link Data
 
-Getting data is integrated into `tq_get()`. Two get options exist to retrieve Quandl data:
+Getting data is integrated into `tq_get()`. Two get options exist to retrieve Nasdaq Data Link data:
 
-1. `get = "quandl"`: Get's Quandl time series data. A wrapper for `Quandl()`.
-2. `get = "quandl.datatable"`: Gets Quandl datatables (larger data sets that may not be time series). A wrapper for `Quandl.datatable()`.
+1. `get = "quandl"`: Gets Nasdaq Data Link time series data.
+2. `get = "quandl.datatable"`: Gets Nasdaq Data Link datatables (larger data sets that may not be time series).
 
-Getting data from Quandl can be achieved in much the same way as the other "get" options. Just pass the "codes" for the data along with desired arguments for the underlying function. 
+Getting data from Nasdaq Data Link can be achieved in much the same way as the other "get" options. Just pass the "codes" for the data along with desired arguments for the underlying endpoint. 
 
-The following uses `get = "quandl"` and the "WIKI" database to download daily stock prices for FB and AAPL in 2016. The output is a tidy data frame. 
+The following uses `get = "quandl"` and the "WIKI" database to download daily stock prices for AAPL in 2016. The output is a tidy data frame. 
 
 ```{r, eval = F}
-c("WIKI/FB", "WIKI/AAPL") %>%
+c("WIKI/AAPL") %>%
     tq_get(get  = "quandl",
            from = "2016-01-01",
            to   = "2016-12-31")
 ```
 
-The following time series options are available to be passed to the underlying `Quandl()` function:
+The following time series options are available to be passed to the underlying data request:
 
 * `start_date` (`from`) = "yyyy-mm-dd" | `end_date` (`to`) = "yyyy-mm-dd"
 * `column_index` = numeric column number (e.g. 1)
@@ -173,7 +195,7 @@ The following time series options are available to be passed to the underlying `
 Here's an example to get period returns of the adj.close (column index 11) using the `column_index`, `collapse` and `transform` arguments. 
 
 ```{r, eval = F}
-c("WIKI/FB", "WIKI/AAPL") %>%
+"WIKI/AAPL" %>%
     tq_get(get          = "quandl",
            from         = "2007-01-01",
            to           = "2016-12-31",
@@ -184,7 +206,7 @@ c("WIKI/FB", "WIKI/AAPL") %>%
 
 Datatables are larger data sets. These can be downloaded using `get = "quandl.datatable"`. Note that the time series arguments do not work with data tables. 
 
-Here's several examples of [Zacks Fundamentals Collection B](https://www.quandl.com/databases/ZFB/documentation/about)
+Here's several examples of [Zacks Fundamentals Collection B](https://data.nasdaq.com/databases/ZFB/documentation/about)
 
 ```{r, eval = F}
 # Zacks Fundamentals Collection B (DOW 30 Available to non subscribers)
@@ -197,11 +219,11 @@ tq_get("ZACKS/SHRS", get = "quandl.datatable") # Zacks Shares Out Supplement
 
 ## 2.4 Tiingo API
 
-The [Tiingo API](https://www.tiingo.com/) is a free source for stock prices, cryptocurrencies, and intraday feeds from the IEX (Investors Exchange). This can serve as an alternate source of data to Yahoo! Finance.
+The Tiingo API is a free source for stock prices, cryptocurrencies, and intraday feeds from the IEX (Investors Exchange). This can serve as an alternate source of data to Yahoo! Finance.
 
 ### Authentication
 
-To make full use of the integration you need to get an API key and then set your api key. If you don't have one already, go to [Tiingo](https://www.tiingo.com/) account and get your FREE API key. You can then set it as follows:
+To make full use of the integration you need to get an API key and then set your api key. If you don't have one already, go to Tiingo account and get your FREE API key. You can then set it as follows:
 
 ```{r, eval=FALSE}
 tiingo_api_key('<your-api-key>')
@@ -238,36 +260,42 @@ tq_get(c("btcusd"),
 
 ## 2.5 Alpha Vantage API
 
-[Alpha Vantage](https://www.alphavantage.co/) provides access to a real-time and historical financial data. The `alphavantager` package, a lightweight R interface, has been integrated into `tidyquant` as follows. The benefit of the integration is the __scalability since we can now get multiple symbols returned in a tidy format__. 
+[Alpha Vantage](https://www.alphavantage.co/) provides access to a real-time and historical financial data. The `alphavantager` package, a lightweight R interface, has been integrated into `tidyquant` as follows. The benefit of the integration is the __scalability since we can now get multiple symbols returned in a tidy format__. You will need to install it first.
+
+```r
+install.packages("alphavantager")
+```
 
 ### Authentication
 
 To make full use of the integration you need to get an API key and then set your api key. If you don't have one already, go to [Alpha Vantage](https://www.alphavantage.co/) account and get your FREE API key. You can then set it as follows:
 
 ```{r, eval = F}
+# install.packages("alphavantager")
 av_api_key("<your-api-key>")
 ```
 
 ### Getting Alpha Vantage Data
 
-Getting data is simple as the structure follows the [Alpha Vantage API documentation](https://www.alphavantage.co/documentation/). For example, if you wish to retrieve intraday data at 5 minute intervals for FB and MSFT, you can build the parameters `x = c("FB", "MSFT"), get = "alphavantager", av_fun = "TIME_SERIES_INTRADAY", interval = "5min"`. The familiar `x` and `get` are the same as you always use. The `av_fun` argument comes from `alphavantager::av_get()` and the Alpha Vantage documentation. The `interval` argument comes from the docs as well.
+Getting data is simple as the structure follows the [Alpha Vantage API documentation](https://www.alphavantage.co/documentation/). For example, if you wish to retrieve intraday data at 5 minute intervals for META and MSFT, you can build the parameters `x = c("META", "MSFT"), get = "alphavantager", av_fun = "TIME_SERIES_INTRADAY", interval = "5min"`. The familiar `x` and `get` are the same as you always use. The `av_fun` argument comes from `alphavantager::av_get()` and the Alpha Vantage documentation. The `interval` argument comes from the docs as well.
 
 ```{r, eval = F}
 # Scaling is as simple as supplying multiple symbols
-c("FB", "MSFT") %>%
+c("META", "MSFT") %>%
     tq_get(get = "alphavantage", av_fun = "TIME_SERIES_INTRADAY", interval = "5min")
 ```
 
 ## 2.6 Bloomberg
 
-[Bloomberg](https://www.bloomberg.com/professional/solution/bloomberg-terminal/) provides access to arguably the most comprehensive financial data and is actively used by most major financial instutions that work with financial data. The `Rblpapi` package, an R interface to Bloomberg, has been integrated into `tidyquant` as follows. The benefit of the integration is the __scalability since we can now get multiple symbols returned in a tidy format__. 
+[Bloomberg](https://www.bloomberg.com/professional/solution/bloomberg-terminal/) provides access to arguably the most comprehensive financial data and is actively used by most major financial institutions that work with financial data. The `Rblpapi` package, an R interface to Bloomberg, has been integrated into `tidyquant` as follows. The benefit of the integration is the __scalability since we can now get multiple symbols returned in a tidy format__. 
 
 ### Authentication
 
 To make full use of the integration you need to have a Bloomberg Terminal account (Note this is not a free service). If you have Bloomberg Terminal running on your machine, you can connect as follows:
 
 ```{r, eval = F}
-blpConnect()
+# install.packages("Rblpapi")
+Rblpapi::blpConnect()
 ```
 
 ### Getting Bloomberg Data
@@ -297,11 +325,9 @@ my_bloomberg_data <- c('SPX Index','ODMAX Equity') %>%
 
 # 3.0 Mutate Quantitative Data
 
-Mutating functions enable the `xts`/`zoo`, `quantmod` and `TTR` functions to shine. We'll touch on the mutation functions briefly using the `FANG` data set, which consists of daily prices for FB, AMZN, GOOG, and NFLX from the beginning of 2013 to the end of 2016. We'll apply the functions to grouped data sets to get a feel for how each works
+Mutating functions enable the `xts`/`zoo`, `quantmod` and `TTR` functions to shine. We'll touch on the mutation functions briefly using the `FANG` data set, which consists of daily prices for META, AMZN, GOOG, and NFLX from the beginning of 2013 to the end of 2016. We'll apply the functions to grouped data sets to get a feel for how each works
 
 ```{r}
-data("FANG")
-
 FANG
 ```
 
@@ -324,12 +350,18 @@ Let's go through what happened. `select` allows you to easily choose what column
 Returns from FRED, Oanda, and other sources do not have open, high, low, close (OHLC) format. However, this is not a problem with `select`. The following example shows how to transmute WTI Crude daily prices to monthly prices. Since we only have a single column to pass, we can leave the `select` argument as `NULL` which selects all columns by default. This sends the price column to the `to.period` mutate function. 
 
 ```{r, message=FALSE, warning=FALSE}
-wti_prices <- tq_get("DCOILWTICO", get = "economic.data") 
+wti_prices <- suppressWarnings(
+    tq_get("DCOILWTICO", get = "economic.data")
+)
 
-wti_prices %>%    
-    tq_transmute(mutate_fun = to.period,
-                 period     = "months", 
-                 col_rename = "WTI Price")
+if (tibble::is_tibble(wti_prices)) {
+    wti_prices %>%
+        tq_transmute(mutate_fun = to.period,
+                     period     = "months", 
+                     col_rename = "WTI Price")
+} else {
+    tibble::tibble()
+}
 ```
 
 
@@ -353,14 +385,14 @@ A very powerful example is applying __custom functions__ across a rolling window
 
 1. Get returns
 2. Create a custom function
-3. Apply the custom function accross a rolling window using `tq_mutate(mutate_fun = rollapply)`
+3. Apply the custom function across a rolling window using `tq_mutate(mutate_fun = rollapply)`
 
 _Step 1: Get Returns_
 
 First, get combined returns. The asset and baseline returns should be in wide format, which is needed for the `lm` function in the next step.
 
 ```{r}
-fb_returns <- tq_get("FB", get  = "stock.prices", from = "2016-01-01", to   = "2016-12-31") %>%
+fb_returns <- tq_get("META", get  = "stock.prices", from = "2016-01-01", to   = "2016-12-31") %>%
     tq_transmute(adjusted, periodReturn, period = "weekly", col_rename = "fb.returns")
 
 xlk_returns <- tq_get("XLK", from = "2016-01-01", to = "2016-12-31") %>%
@@ -412,7 +444,6 @@ FANG %>%
     tq_mutate_xy(x = close, y = volume, 
                  mutate_fun = EVWMA, col_rename = "EVWMA")
 ```
-
 
 
 

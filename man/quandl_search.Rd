@@ -2,30 +2,31 @@
 % Please edit documentation in R/api-quandl.R
 \name{quandl_search}
 \alias{quandl_search}
-\title{Search the Quandl database}
+\title{Search the Nasdaq Data Link database}
 \usage{
 quandl_search(query, silent = FALSE, per_page = 10, ...)
 }
 \arguments{
-\item{query}{Search terms}
+\item{query}{A character string giving the search term passed to the
+Nasdaq Data Link dataset search endpoint.}
 
-\item{silent}{Prints the results when FALSE.}
+\item{silent}{A logical indicating whether to suppress console output for
+matching datasets.}
 
-\item{per_page}{Number of results returned per page.}
+\item{per_page}{An integer specifying how many search results to return per page.}
 
-\item{...}{Additional named values that are interpretted as Quandl API parameters.}
+\item{...}{Additional arguments passed to the Nasdaq Data Link search API.}
 }
 \value{
 Returns a tibble with search results.
 }
 \description{
-Search the Quandl database
+Search the Nasdaq Data Link database
 }
 \details{
-A wrapper for \code{Quandl::Quandl.search()}
+A wrapper around the Nasdaq Data Link dataset search endpoint.
 }
 \examples{
-
 \dontrun{
 quandl_search(query = "oil")
 }

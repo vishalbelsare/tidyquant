@@ -56,8 +56,18 @@ A \code{function} will be called with a single argument,
 the plot data. The return value must be a \code{data.frame.}, and
 will be used as the layer data.}
 
-\item{position}{Position adjustment, either as a string, or the result of
-a call to a position adjustment function.}
+\item{position}{A position adjustment to use on the data for this layer. This
+can be used in various ways, including to prevent overplotting and
+improving the display. The \code{position} argument accepts the following:
+\itemize{
+\item The result of calling a position function, such as \code{position_jitter()}.
+This method allows for passing extra arguments to the position.
+\item A string naming the position adjustment. To give the position as a
+string, strip the function name of the \code{position_} prefix. For example,
+to use \code{position_jitter()}, give the position as \code{"jitter"}.
+\item For more information and other ways to specify the position, see the
+\link[ggplot2:layer_positions]{layer position} documentation.
+}}
 
 \item{na.rm}{If \code{TRUE}, silently removes \code{NA} values, which
 typically desired for moving averages.}
@@ -66,12 +76,14 @@ typically desired for moving averages.}
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display.}
+display. To include legend keys for all levels, even
+when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
+but unobserved levels are omitted.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
-that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:borders]{ggplot2::borders()}}.}
+that define both data and aesthetics and shouldn't inherit behavior from
+the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{ggplot2::borders()}}.}
 
 \item{ma_fun}{The function used to calculate the moving average. Seven options are
 available including: SMA, EMA, WMA, DEMA, ZLEMA, VWMA, and EVWMA. The default is
@@ -84,7 +96,7 @@ available including: SMA, EMA, WMA, DEMA, ZLEMA, VWMA, and EVWMA. The default is
 calculated; see notes.}
 
 \item{ratio}{A smoothing/decay ratio.  \code{ratio} overrides \code{wilder}
-in \code{EMA}, and provides additional smoothing in \code{VMA}.}
+in \code{EMA}.}
 
 \item{v}{The 'volume factor' (a number in [0,1]).  See Notes.}
 
@@ -110,11 +122,11 @@ Uses \code{wilder} and \code{ratio} args.
 Uses a set of weights, \code{wts}, to weight observations in the moving average.
 \item \strong{\href{https://www.investopedia.com/articles/trading/10/double-exponential-moving-average.asp}{Double exponential moving averages (DEMA)}}:
 Uses \code{v} volume factor, \code{wilder} and \code{ratio} args.
-\item \strong{\href{https://en.wikipedia.org/wiki/Zero_lag_exponential_moving_average}{Zero-lag exponential moving averages (ZLEMA)}}:
+\item \strong{Zero-lag exponential moving averages (ZLEMA)}:
 Uses \code{wilder} and \code{ratio} args.
 \item \strong{\href{https://www.investopedia.com/articles/trading/11/trading-with-vwap-mvwap.asp}{Volume-weighted moving averages (VWMA)}}:
 Requires \code{volume} aesthetic.
-\item \strong{\href{https://www.motivewave.com/studies/elastic_volume_weighted_moving_average.htm}{Elastic, volume-weighted moving averages (EVWMA)}}:
+\item \strong{\href{https://docs.motivewave.com/studies/e-f#elastic-volume-weighted-moving-average}{Elastic, volume-weighted moving averages (EVWMA)}}:
 Requires \code{volume} aesthetic.
 }
 }
@@ -129,13 +141,13 @@ The following aesthetics are understood (required are in bold):
 \item \code{colour}
 \item \code{group}
 \item \code{linetype}
+\item \code{linewidth}
+
 \item \code{size}
 }
 }
 
 \examples{
-# Load libraries
-library(tidyquant)
 library(dplyr)
 library(ggplot2)
 
@@ -148,7 +160,7 @@ AAPL \%>\%
     geom_ma(ma_fun = SMA, n = 50) +                 # Plot 50-day SMA
     geom_ma(ma_fun = SMA, n = 200, color = "red") + # Plot 200-day SMA
     coord_x_date(xlim = c("2016-01-01", "2016-12-31"),
-                 ylim = c(75, 125))                     # Zoom in
+                 ylim = c(20, 30))                     # Zoom in
 
 # EVWMA
 AAPL \%>\%
@@ -156,7 +168,7 @@ AAPL \%>\%
     geom_line() +                                                   # Plot stock price
     geom_ma(aes(volume = volume), ma_fun = EVWMA, n = 50) +   # Plot 50-day EVWMA
     coord_x_date(xlim = c("2016-01-01", "2016-12-31"),
-                 ylim = c(75, 125))                                  # Zoom in
+                 ylim = c(20, 30))                                  # Zoom in
 }
 \seealso{
 See individual modeling functions for underlying parameters:

@@ -18,30 +18,32 @@ for \code{x}. Options include:
 \itemize{
 \item \code{"stock.prices"}: Get the open, high, low, close, volume and adjusted
 stock prices for a stock symbol from
-\href{https://finance.yahoo.com/}{Yahoo Finance}. Wrapper for \code{quantmod::getSymbols()}.
+Yahoo Finance (https://finance.yahoo.com/). Wrapper for \code{quantmod::getSymbols()}.
 \item \code{"dividends"}: Get the dividends for a stock symbol from
-\href{https://finance.yahoo.com/}{Yahoo Finance}. Wrapper for \code{quantmod::getDividends()}.
+Yahoo Finance (https://finance.yahoo.com/). Wrapper for \code{quantmod::getDividends()}.
 \item \code{"splits"}: Get the split ratio for a stock symbol from
-\href{https://finance.yahoo.com/}{Yahoo Finance}. Wrapper for \code{quantmod::getSplits()}.
+Yahoo Finance (https://finance.yahoo.com/). Wrapper for \code{quantmod::getSplits()}.
 \item \code{"stock.prices.japan"}: Get the open, high, low, close, volume and adjusted
 stock prices for a stock symbol from
-\href{https://finance.yahoo.co.jp/}{Yahoo Finance Japan}. Wrapper for \code{quantmod::getSymbols.yahooj()}.
+Yahoo Finance Japan. Wrapper for \code{quantmod::getSymbols.yahooj()}.
 \item \code{"economic.data"}: Get economic data from
 \href{https://fred.stlouisfed.org/}{FRED}. rapper for \code{quantmod::getSymbols.FRED()}.
 \item \code{"quandl"}: Get data sets from
-\href{https://www.quandl.com/}{Quandl}. Wrapper for \code{Quandl::Quandl()}.
+\href{https://data.nasdaq.com/}{Nasdaq Data Link}. Wrapper for tidyquant's
+built-in Data Link client.
 See also \code{\link[=quandl_api_key]{quandl_api_key()}}.
 \item \code{"quandl.datatable"}: Get data tables from
-\href{https://www.quandl.com/}{Quandl}. Wrapper for \code{Quandl::Quandl.datatable()}.
+\href{https://data.nasdaq.com/}{Nasdaq Data Link}. Wrapper for tidyquant's
+built-in Data Link datatable client.
 See also \code{\link[=quandl_api_key]{quandl_api_key()}}.
 \item \code{"tiingo"}: Get data sets from
-\href{https://api.tiingo.com/}{Tiingo}. Wrapper for \code{riingo::riingo_prices()}.
+Tingo (https://www.tiingo.com/). Wrapper for \code{riingo::riingo_prices()}.
 See also \code{\link[=tiingo_api_key]{tiingo_api_key()}}.
 \item \code{"tiingo.iex"}: Get data sets from
-\href{https://api.tiingo.com/}{Tiingo}. Wrapper for \code{riingo::riingo_iex_prices()}.
+Tingo (https://www.tiingo.com/). Wrapper for \code{riingo::riingo_iex_prices()}.
 See also \code{\link[=tiingo_api_key]{tiingo_api_key()}}.
 \item \code{"tiingo.crypto"}: Get data sets from
-\href{https://api.tiingo.com/}{Tiingo}. Wrapper for \code{riingo::riingo_crypto_prices()}.
+Tingo (https://www.tiingo.com/). Wrapper for \code{riingo::riingo_crypto_prices()}.
 See also \code{\link[=tiingo_api_key]{tiingo_api_key()}}.
 \item \code{"alphavantager"}: Get data sets from
 \href{https://www.alphavantage.co/}{Alpha Vantage}. Wrapper for \code{alphavantager::av_get()}.
@@ -79,11 +81,11 @@ Get quantitative data in \code{tibble} format
 \details{
 \code{tq_get()} is a consolidated function that gets data from various
 web sources. The function is a wrapper for several \code{quantmod}
-functions, \code{Quandl} functions, and also gets data from websources unavailable
+functions, several web APIs, and also gets data from websources unavailable
 in other packages.
 The results are always returned as a \code{tibble}. The advantages
 are (1) only one function is needed for all data sources and (2) the function
-can be seemlessly used with the tidyverse: \code{purrr}, \code{tidyr}, and
+can be seamlessly used with the tidyverse: \code{purrr}, \code{tidyr}, and
 \code{dplyr} verbs.
 
 \code{tq_get_options()} returns a list of valid \code{get} options you can
@@ -94,8 +96,6 @@ next version. Please use \code{tq_index_options()} instead.
 }
 \examples{
 # Load libraries
-library(tidyquant)
-library(tidyverse)
 
 # Get the list of `get` options
 tq_get_options()
@@ -104,7 +104,7 @@ tq_get_options()
 aapl_stock_prices <- tq_get("AAPL")
 
 # Get stock prices for multiple stocks
-mult_stocks <- tq_get(c("FB", "AMZN"),
+mult_stocks <- tq_get(c("META", "AMZN"),
                       get  = "stock.prices",
                       from = "2016-01-01",
                       to   = "2017-01-01")
@@ -112,16 +112,17 @@ mult_stocks <- tq_get(c("FB", "AMZN"),
 
 \dontrun{
 
-# --- Quandl ---
-
+# --- Nasdaq Data Link (formerly Quandl) ---
 quandl_api_key('<your_api_key>')
-
-# Energy data from EIA
 tq_get("EIA/PET_MTTIMUS1_M", get = "quandl", from = "2010-01-01")
 
 
-# --- Tiingo ---
+# Energy data from EIA
 
+
+
+# --- Tiingo ---
+if (rlang::is_installed("riingo")) {
 tiingo_api_key('<your_api_key>')
 
 # Tiingo Prices (Free alternative to Yahoo Finance!)
@@ -142,8 +143,11 @@ tq_get(c("btcusd", "btceur"),
        resample_frequency = "5min")
 
 
+}
+
 # --- Alpha Vantage ---
 
+if (rlang::is_installed("alphavantager")) {
 av_api_key('<your_api_key>')
 
 # Daily Time Series
@@ -158,13 +162,13 @@ tq_get("AAPL",
        av_fun     = "TIME_SERIES_INTRADAY",
        interval   = "15min",
        outputsize = "full")
-
 # FX DAILY
 tq_get("USD/EUR", get = "alphavantage", av_fun = "FX_DAILY", outputsize = "full")
 
 # FX REAL-TIME QUOTE
 tq_get("USD/EUR", get = "alphavantage", av_fun = "CURRENCY_EXCHANGE_RATE")
 
+}
 }
 }
 \seealso{

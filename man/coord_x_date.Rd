@@ -17,7 +17,11 @@ format for date or "YYYY-MM-DD HH:MM:SS" for date-time.}
 
 \item{expand}{If \code{TRUE}, the default, adds a small expansion factor to
 the limits to ensure that data and axes don't overlap. If \code{FALSE},
-limits are taken exactly from the data or \code{xlim}/\code{ylim}.}
+limits are taken exactly from the data or \code{xlim}/\code{ylim}.
+Giving a logical vector will separately control the expansion for the four
+directions (top, left, bottom and right). The \code{expand} argument will be
+recycled to length 4 if necessary. Alternatively, can be a named logical
+vector to control a single direction, e.g. \code{expand = c(bottom = FALSE)}.}
 }
 \description{
 Zoom in on plot regions using date ranges or date-time ranges
@@ -37,7 +41,6 @@ that enables quickly zooming in on plot regions using a date-time range.
 }
 \examples{
 # Load libraries
-library(tidyquant)
 library(dplyr)
 library(ggplot2)
 
@@ -49,8 +52,7 @@ AAPL \%>\%
     geom_ma(n = 50) +                     # Plot 50-day Moving Average
     geom_ma(n = 200, color = "red") +     # Plot 200-day Moving Average
     # Zoom in
-    coord_x_date(xlim = c("2016-01-01", "2016-12-31"),
-                 ylim = c(75, 125))
+    coord_x_date(xlim = c("2016-01-01", "2016-12-31"))
 
 
 # coord_x_datetime
